@@ -12,10 +12,16 @@ library(FCPS)
 
 parser <- ArgumentParser(description="FCPS caller")
 
-parser$add_argument('--data.matrix',
+# parser$add_argument('--data.matrix',
+#                     type="character",
+#                     help='gz-compressed textfile containing the comma-separated data to be clustered.')
+# parser$add_argument('--data.true_labels',
+#                     type="character",
+#                     help='gz-compressed textfile with the true labels.')
+parser$add_argument('--train.data.matrix',
                     type="character",
                     help='gz-compressed textfile containing the comma-separated data to be clustered.')
-parser$add_argument('--data.true_labels',
+parser$add_argument('--labels_train',
                     type="character",
                     help='gz-compressed textfile with the true labels.')
 parser$add_argument('--seed',
@@ -72,10 +78,12 @@ do_fcps <- function(truth, n_cells, seed) {
 
 }
 
-truth <- load_labels(args[['data.true_labels']])
+# truth <- load_labels(args[['data.true_labels']])
+truth <- load_labels(args[['labels_train']])
 
 # only for 2
-data <- load_dataset(args[['data.matrix']]) 
+# data <- load_dataset(args[['data.matrix']]) 
+data <- load_dataset(args[['train.data.matrix']]) 
 n_cells <- nrow(data)
 
 # res <- do_fcps(truth = truth, seed = args$seed) # 1
