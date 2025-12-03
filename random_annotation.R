@@ -31,7 +31,7 @@ parser$add_argument("--name", "-n", dest="name", type="character", help="name of
 args <- parser$parse_args()
 
 load_labels <- function(data_file) {
-  (fd <- read.table(gzfile(data_file), header = FALSE)$V1)
+  (fd <- read.table(gzfile(data_file), header = FALSE, quote = "\'", na.strings = '""')$V1)
 }
 
 load_dataset <- function(data_file) {
