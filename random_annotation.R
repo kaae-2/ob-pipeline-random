@@ -48,7 +48,7 @@ do_fcps <- function(truth, seed) {
   # Randomly assign a class to each cell
   res <- sample(truth) 
   
-  res_char <- res %>% as.character()
+  res_char <- as.character(res)
   
   res_final <- paste0(res_char, ".0")
 
