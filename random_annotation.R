@@ -86,7 +86,7 @@ do_fcps <- function(truth, n_cells, seed) {
 
 # truth <- load_labels(args[['data.true_labels']])
 truth <- load_labels(args[['labels_test']])
-n_cells <- length(truth) - 1
+n_cells <- length(truth) 
 
 # only for 2
 # data <- load_dataset(args[['data.matrix']]) 
@@ -109,8 +109,11 @@ write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = F
 # TEST 2)
 # truth <- read.table(gzfile("Documents/courses/Benchmarking/data/true_labs.txt.gz"), header = FALSE, quote = "\'", na.strings = '""')$V1
 # data <- read.table(gzfile("Documents/courses/Benchmarking/data/data_matrix.matrix.gz"), header = TRUE, sep = ",")
-# n_cells <- nrow(data)
+# n_cells <- length(truth)
 # res <- do_fcps(truth = truth, n_cells = n_cells, seed = 66)
-# outfile <- file.path("Downloads", "Bla_predicted_labels.txt")
+# length(res)
+# outfile <- file.path("Downloads", "NEW_predicted_labels.txt")
 # write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = '""')
-
+# 
+# data <- read.table(outfile, header = FALSE)
+# dim(data)
