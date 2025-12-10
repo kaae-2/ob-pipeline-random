@@ -8,7 +8,7 @@
 
 library(argparse)
 library(FCPS)
-# library(dplyr)
+library(dplyr)
 ## library(R.utils)
 
 parser <- ArgumentParser(description="FCPS caller")
@@ -97,10 +97,11 @@ data <- load_dataset(args[['test.data.matrix']])
 res <- do_fcps(truth = truth, n_cells = n_cells, seed = args$seed) # 2
 
 # Define unassinged/NA label
-na_label <- max(na.exclude(as.integer(res))) + 1
+na_label <- res %>% as.integer() %>% na.exclude %>% max() + 1 
+na_label_str <- na_label %>%  as.character()
 
 outfile <- file.path(args[['output_dir']], paste0(args[['name']], "_predicted_labels.txt"))
-write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = na_label)
+write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = na_label_str)
 
 
 # TEST 1)
@@ -118,7 +119,7 @@ write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = F
 # length(res)
 # na_label <- res %>% as.integer() %>% na.exclude() %>% max() + 1
 # outfile <- file.path("Downloads", "NEW_predicted_labels.txt")
-# write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = na_label)
+# write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = as.character(na_label))
 
 # data <- read.table(outfile, header = FALSE)
 # dim(data)
