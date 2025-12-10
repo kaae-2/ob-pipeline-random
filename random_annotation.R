@@ -8,6 +8,7 @@
 
 library(argparse)
 library(FCPS)
+library(dplyr)
 ## library(R.utils)
 
 parser <- ArgumentParser(description="FCPS caller")
@@ -95,15 +96,18 @@ data <- load_dataset(args[['test.data.matrix']])
 # res <- do_fcps(truth = truth, seed = args$seed) # 1
 res <- do_fcps(truth = truth, n_cells = n_cells, seed = args$seed) # 2
 
+# Define unassinged/NA label
+na_label <- res %>% as.integer() %>% na.exclude() %>% max() + 1
+
 outfile <- file.path(args[['output_dir']], paste0(args[['name']], "_predicted_labels.txt"))
-write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = '""')
+write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = na_label)
 
 
 # TEST 1)
 # truth <- read.table(gzfile("Documents/courses/Benchmarking/data/true_labs.txt.gz"), header = FALSE, quote = "\'", na.strings = '""')$V1
 # res <- do_fcps(truth = truth, seed = 66)
 # outfile <- file.path("Downloads", "Bla_predicted_labels.txt")
-# write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = '""')
+# write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = '99')
 
 
 # TEST 2)
@@ -112,8 +116,9 @@ write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = F
 # n_cells <- length(truth)
 # res <- do_fcps(truth = truth, n_cells = n_cells, seed = 66)
 # length(res)
+# na_label <- res %>% as.integer() %>% na.exclude() %>% max() + 1
 # outfile <- file.path("Downloads", "NEW_predicted_labels.txt")
-# write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = '""')
-# 
+# write.table(file = outfile, res, col.names = FALSE, row.names = FALSE, quote = FALSE, na = na_label)
+
 # data <- read.table(outfile, header = FALSE)
 # dim(data)
