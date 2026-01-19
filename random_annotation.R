@@ -6,11 +6,6 @@
 ## being true number of clusters `k` and tested range `k plusminus 2`
 
 
-library(argparse)
-library(FCPS)
-library(dplyr)
-## library(R.utils)
-
 parser <- ArgumentParser(description="FCPS caller")
 
 # parser$add_argument('--data.matrix',
