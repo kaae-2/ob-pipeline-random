@@ -44,6 +44,7 @@ train_y_path <- args[['data.train_labels']]
 test_x_path <- args[['data.test_matrix']]
 name <- args[['name']]
 output_dir <- args[['output_dir']]
+output_dir <- normalizePath(output_dir, mustWork = FALSE)
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 # FOR TESTING
@@ -144,7 +145,11 @@ for (i in seq_along(test_x_list)) {
 old_wd <- getwd()
 setwd(tmp_dir)
 tar(
-  tarfile = glue("{output_dir}/{name}_predicted_labels.tar.gz"),
+  tarfile = {
+    tar_path <- file.path(output_dir, sprintf("%s_predicted_labels.tar.gz", name))
+    dir.create(dirname(tar_path), recursive = TRUE, showWarnings = FALSE)
+    tar_path
+  },
   files = basename(csv_files),
   compression = "gzip",
   tar = "internal"
