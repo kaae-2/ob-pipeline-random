@@ -57,32 +57,24 @@ dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 # LOAD TRAIN Y
 train_y_files <- utils::untar(train_y_path, list = TRUE)
-train_y_list <- setNames(vector("list", length(train_y_files)), train_y_files)
 
 # extract to a temp dir
 tmp <- tempdir()
 utils::untar(train_y_path, exdir = tmp)
 
+truth <- character()
 for (file in train_y_files) {
   df <- read_csv(file.path(tmp, file), col_names = FALSE, show_col_types = FALSE)
-  train_y_list[[file]] <- df
+  truth <- c(truth, as.character(df[[1]]))
+  rm(df)
 }
-
-# Flatten all labels from all training sets 
-flat_list <- unlist(train_y_list, recursive = TRUE, use.names = FALSE)
 
 # LOAD X TEST 
 test_x_files <- utils::untar(test_x_path, list = TRUE)
-test_x_list <- setNames(vector("list", length(test_x_files)), test_x_files)
 
 # extract to a temp dir
 tmp <- tempdir()
 utils::untar(test_x_path, exdir = tmp)
-
-for (file in test_x_files) {
-  df <- read_csv(file.path(tmp, file), col_names = FALSE, show_col_types = FALSE)
-  test_x_list[[file]] <- df
-}
 
 # Sample from unique true labels
 do_random <- function(truth, n_cells, seed = 101) {
@@ -108,20 +100,21 @@ get_sample_number <- function(file_name, fallback) {
   substr(base, m[1], m[1] + attr(m, "match.length") - 1)
 }
 
-truth <- flat_list
-tmp_dir <- tempdir()
+tmp_dir <- file.path(tempdir(), sprintf("random-%d", Sys.getpid()))
+dir.create(tmp_dir, recursive = TRUE, showWarnings = FALSE)
 # tmp_dir <- "~/Documents/courses/Benchmarking/repos/ob-pipeline-random/tmp_dir"
-csv_files <- character(length(test_x_list))
-names(csv_files) <- names(test_x_list)
+csv_files <- character(length(test_x_files))
+names(csv_files) <- test_x_files
   
-# Run random classification on each test sample. 
-for (i in seq_along(test_x_list)) {
-  test_x_name <- names(test_x_list)[i]
+# Run random classification on each test sample.
+for (i in seq_along(test_x_files)) {
+  test_x_name <- test_x_files[i]
   
   # test_x_name <- "data_import-data-14.csv"
-  test_x <- test_x_list[[test_x_name]]
+  test_x <- read_csv(file.path(tmp, test_x_name), col_names = FALSE, show_col_types = FALSE)
   
-  n_cells <- nrow(test_x) 
+  n_cells <- nrow(test_x)
+  rm(test_x)
   pred_y <- do_random(truth = truth, n_cells = n_cells)
   
   if (length(pred_y) != n_cells){
@@ -136,6 +129,8 @@ for (i in seq_along(test_x_list)) {
   
   write_delim(df, file = csv_file, col_names = FALSE, quote = "none", delim = ",")
   csv_files[test_x_name] <- csv_file
+  rm(pred_y, df)
+  invisible(gc(verbose = FALSE))
   
 }
 
