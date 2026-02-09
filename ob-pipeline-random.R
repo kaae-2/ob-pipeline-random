@@ -77,17 +77,34 @@ tmp <- tempdir()
 utils::untar(test_x_path, exdir = tmp)
 
 # Sample from unique true labels
-do_random <- function(truth, n_cells, seed = 101) {
-  
-  set.seed(seed)
+do_random <- function(label_pool, n_cells) {
+  sample(label_pool, n_cells, replace = TRUE)
+}
 
-  # Randomly assign a class to each cell
-  res <- unique(truth)
-  
-  res_final <- sample(res, n_cells, replace = TRUE)
+count_rows <- function(path) {
+  wc <- tryCatch(
+    suppressWarnings(system2("wc", c("-l", path), stdout = TRUE, stderr = FALSE)),
+    error = function(e) character()
+  )
+  if (length(wc) > 0L) {
+    parsed <- suppressWarnings(as.integer(strsplit(trimws(wc[1]), "\\s+")[[1]][1]))
+    if (!is.na(parsed)) {
+      return(parsed)
+    }
+  }
 
-  return(res_final)
-
+  # Fallback for environments where wc is unavailable.
+  con <- file(path, open = "r")
+  on.exit(close(con), add = TRUE)
+  n <- 0L
+  repeat {
+    lines <- readLines(con, n = 100000L, warn = FALSE)
+    if (length(lines) == 0L) {
+      break
+    }
+    n <- n + length(lines)
+  }
+  n
 }
 
 get_sample_number <- function(file_name, fallback) {
@@ -105,17 +122,16 @@ dir.create(tmp_dir, recursive = TRUE, showWarnings = FALSE)
 # tmp_dir <- "~/Documents/courses/Benchmarking/repos/ob-pipeline-random/tmp_dir"
 csv_files <- character(length(test_x_files))
 names(csv_files) <- test_x_files
+label_pool <- unique(truth)
+set.seed(101)
   
 # Run random classification on each test sample.
 for (i in seq_along(test_x_files)) {
   test_x_name <- test_x_files[i]
   
   # test_x_name <- "data_import-data-14.csv"
-  test_x <- read_csv(file.path(tmp, test_x_name), col_names = FALSE, show_col_types = FALSE)
-  
-  n_cells <- nrow(test_x)
-  rm(test_x)
-  pred_y <- do_random(truth = truth, n_cells = n_cells)
+  n_cells <- count_rows(file.path(tmp, test_x_name))
+  pred_y <- do_random(label_pool = label_pool, n_cells = n_cells)
   
   if (length(pred_y) != n_cells){
     message("Random: mismatch between predictions and test rows")
@@ -130,7 +146,6 @@ for (i in seq_along(test_x_files)) {
   write_delim(df, file = csv_file, col_names = FALSE, quote = "none", delim = ",")
   csv_files[test_x_name] <- csv_file
   rm(pred_y, df)
-  invisible(gc(verbose = FALSE))
   
 }
 
