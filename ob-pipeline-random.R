@@ -50,6 +50,14 @@ output_dir <- args[['output_dir']]
 output_dir <- normalizePath(output_dir, mustWork = FALSE)
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
+extract_archive <- function(path, out_dir) {
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  status <- utils::untar(path, exdir = out_dir)
+  if (!identical(status, 0L)) {
+    stop(glue("Failed to extract {path} into {out_dir}; untar exited with status {status}."))
+  }
+}
+
 # FOR TESTING
 # Path to zipped data
 # dataset_path <- "/Users/srz223/Documents/courses/Benchmarking/repos/ob-pipeline-cytof/out/data/data_import/dataset_name-FR-FCM-Z2KP_virus_final_seed-42/preprocessing/data_preprocessing/num-1_test-sample-limit-5"
@@ -63,7 +71,7 @@ train_y_files <- utils::untar(train_y_path, list = TRUE)
 
 # extract to a temp dir
 tmp <- tempdir()
-utils::untar(train_y_path, exdir = tmp)
+extract_archive(train_y_path, tmp)
 
 truth <- character()
 for (file in train_y_files) {
@@ -77,7 +85,7 @@ test_x_files <- utils::untar(test_x_path, list = TRUE)
 
 # extract to a temp dir
 tmp <- tempdir()
-utils::untar(test_x_path, exdir = tmp)
+extract_archive(test_x_path, tmp)
 
 # Sample from unique true labels
 do_random <- function(label_pool, n_cells) {
@@ -133,7 +141,11 @@ for (i in seq_along(test_x_files)) {
   test_x_name <- test_x_files[i]
   
   # test_x_name <- "data_import-data-14.csv"
-  n_cells <- count_rows(file.path(tmp, test_x_name))
+  test_x_file <- file.path(tmp, test_x_name)
+  if (!file.exists(test_x_file)) {
+    stop(glue("Extracted test matrix is missing: {test_x_file}"))
+  }
+  n_cells <- count_rows(test_x_file)
   pred_y <- do_random(label_pool = label_pool, n_cells = n_cells)
   
   if (length(pred_y) != n_cells){
@@ -156,8 +168,9 @@ for (i in seq_along(test_x_files)) {
 # name <- "random"
 # output_dir <- "~/Documents/courses/Benchmarking/repos/ob-pipeline-random/tmp_out"
 old_wd <- getwd()
+on.exit(setwd(old_wd), add = TRUE)
 setwd(tmp_dir)
-tar(
+tar_status <- tar(
   tarfile = {
     tar_path <- file.path(output_dir, sprintf("%s_predicted_labels.tar.gz", name))
     dir.create(dirname(tar_path), recursive = TRUE, showWarnings = FALSE)
@@ -167,7 +180,9 @@ tar(
   compression = "gzip",
   tar = "internal"
 )
-setwd(old_wd)
+if (!identical(tar_status, 0L)) {
+  stop(glue("Failed to create prediction archive; tar exited with status {tar_status}."))
+}
 
 message("Random: done")
 
