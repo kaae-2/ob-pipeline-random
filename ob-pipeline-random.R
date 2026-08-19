@@ -133,7 +133,12 @@ dir.create(tmp_dir, recursive = TRUE, showWarnings = FALSE)
 # tmp_dir <- "~/Documents/courses/Benchmarking/repos/ob-pipeline-random/tmp_dir"
 csv_files <- character(length(test_x_files))
 names(csv_files) <- test_x_files
-label_pool <- unique(truth)
+normalized_truth <- tolower(trimws(truth))
+ungated_tokens <- c("", "0", "0.0", "ungated", "unlabeled", "unlabelled")
+label_pool <- unique(truth[!is.na(truth) & !(normalized_truth %in% ungated_tokens)])
+if (length(label_pool) == 0L) {
+  stop("No known training labels remain after excluding ungated label 0.")
+}
 set.seed(101)
   
 # Run random classification on each test sample.
